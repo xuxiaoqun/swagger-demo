@@ -10,17 +10,21 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import javax.validation.ConstraintViolationException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * @author xzc
+ */
 @Component
 @ControllerAdvice
 @Slf4j
 public class ExceptionHandle {
 
-    @ExceptionHandler(Exception.class)
+    @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseBody
     public BaseResponse exceptionHandler(MethodArgumentNotValidException e) {
         log.error("异常",e);
@@ -34,6 +38,21 @@ public class ExceptionHandle {
             errorMsg.add(result);
         }
         List<String> list = e.getBindingResult().getFieldErrors().stream().map(message -> message.getDefaultMessage()).collect(Collectors.toList());
-        return new BaseResponse(20000,errorMsg);
+        return BaseResponse.builder().code(403).errorMsg(errorMsg).build();
     }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    @ResponseBody
+    public BaseResponse exceptionHandler(ConstraintViolationException e) {
+        e.printStackTrace();
+        return BaseResponse.builder().code(403).msg(e.getLocalizedMessage()).build();
+    }
+
+    @ExceptionHandler(Exception.class)
+    @ResponseBody
+    public BaseResponse exceptionHandler(Exception e) {
+        return BaseResponse.builder().code(403).msg("系统开小差了").build();
+    }
+
+
 }
