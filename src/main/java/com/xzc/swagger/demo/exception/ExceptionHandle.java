@@ -13,8 +13,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import javax.validation.ConstraintViolationException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * @author xzc
@@ -28,7 +26,7 @@ public class ExceptionHandle {
     @ResponseBody
     public BaseResponse exceptionHandler(MethodArgumentNotValidException e) {
         log.error("异常",e);
-        List<ArgumentInvalidResult> errorMsg = new ArrayList<ArgumentInvalidResult>();
+        List<ArgumentInvalidResult> errorMsg = new ArrayList<>();
 
         for (FieldError error: e.getBindingResult().getFieldErrors()) {
             ArgumentInvalidResult result = new ArgumentInvalidResult();
@@ -37,8 +35,7 @@ public class ExceptionHandle {
             result.setDefaultMsg(error.getDefaultMessage());
             errorMsg.add(result);
         }
-        List<String> list = e.getBindingResult().getFieldErrors().stream().map(message -> message.getDefaultMessage()).collect(Collectors.toList());
-        return BaseResponse.builder().code(403).errorMsg(errorMsg).build();
+         return BaseResponse.builder().code(403).errorMsg(errorMsg).build();
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
@@ -51,8 +48,14 @@ public class ExceptionHandle {
     @ExceptionHandler(Exception.class)
     @ResponseBody
     public BaseResponse exceptionHandler(Exception e) {
+        log.error("未定义异常：", e);
         return BaseResponse.builder().code(403).msg("系统开小差了").build();
     }
 
 
+    @ExceptionHandler(BusinessException.class)
+    @ResponseBody
+    public BaseResponse exceptionHandler(BusinessException exception){
+        return BaseResponse.builder().code(exception.getResponseCode().getCode()).msg(exception.getMessage()).build();
+    }
 }
